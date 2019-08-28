@@ -1,5 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
 
+from geospaas.utils.utils import validate_uri
+
 def crawl(url, **options):
     validate_uri(url)
 
@@ -11,7 +13,7 @@ def crawl(url, **options):
                 s.get('service').lower()=='opendap'][0]
         metno_obs_stat, cr = StandardMeteorologicalBuoy.objects.get_or_create(url)
         if cr:
-            print 'Added %s, no. %d/%d'%(url, added, len(c.datasets))
+            print('Added %s, no. %d/%d'%(url, added, len(c.datasets)))
             added += 1
     return added
 
