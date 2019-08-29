@@ -17,8 +17,8 @@ def crawl(url, **options):
                 s.get('service').lower()=='opendap'][0]
         metno_obs_stat, cr = MetObsStation.objects.get_or_create(url)
         if cr:
-            print('Added %s, no. %d/%d'%(url, added, len(c.datasets)))
             added += 1
+            print('Added %s, no. %d/%d'%(url, added, len(c.datasets)))
     return added
 
 class Command(BaseCommand):
