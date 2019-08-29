@@ -1,4 +1,5 @@
 import netCDF4
+import warnings
 from dateutil.parser import parse
 
 import pythesint as pti
@@ -9,9 +10,10 @@ from django.contrib.gis.geos import GEOSGeometry
 from geospaas.vocabularies.models import Platform
 from geospaas.vocabularies.models import Instrument
 from geospaas.vocabularies.models import DataCenter
+from geospaas.vocabularies.models import Parameter
 from geospaas.vocabularies.models import ISOTopicCategory
 from geospaas.catalog.models import GeographicLocation
-from geospaas.catalog.models import DatasetURI, Source, Dataset
+from geospaas.catalog.models import DatasetURI, Source, Dataset, DatasetParameter
 
 # test url
 # uri = https://thredds.met.no/thredds/dodsC/met.no/observations/stations/SN99938.nc
@@ -71,8 +73,8 @@ class MetObsStationManager(models.Manager):
         summary = nc_dataset.summary
 
         ds = Dataset(
-                entry_id = 'NOAA_NDBC_%s'%nc_dataset.station,
-                entry_title=entrytitle,
+                entry_id = nc_dataset.id,
+                entry_title = entrytitle,
                 ISO_topic_category = iso_category,
                 data_center = dc,
                 summary = summary,
@@ -84,6 +86,20 @@ class MetObsStationManager(models.Manager):
 
         ds_uri = DatasetURI.objects.get_or_create(uri=uri, dataset=ds)[0]
 
+        # Add dataset parameters
+        vars = nc_dataset.variables
+        time = vars.pop('time')
+        lat = vars.pop('latitude')
+        lon = vars.pop('longitude')
+        id = vars.pop('station_id')
+        for key in vars.keys():
+            try:
+                par = Parameter.objects.get(standard_name=vars[key].standard_name)
+            except Parameter.DoesNotExist as e:
+                warnings.warn('{}: {}'.format(vars[key].standard_name, e.args[0]))
+                continue
+            dsp = DatasetParameter(dataset=ds, parameter=par)
+            dsp.save()
 
         return ds, True
 

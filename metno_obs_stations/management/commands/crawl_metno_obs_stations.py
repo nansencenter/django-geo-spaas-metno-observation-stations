@@ -1,17 +1,21 @@
+from thredds_crawler.crawl import Crawl
+
 from django.core.management.base import BaseCommand, CommandError
 
 from geospaas.utils.utils import validate_uri
+
+from metno_obs_stations.models import MetObsStation
 
 def crawl(url, **options):
     validate_uri(url)
 
     skips = Crawl.SKIPS + ['.*ncml']
-    c = Crawl(url, select=select, skip=slips, debug=True)
+    c = Crawl(url, skip=skips, debug=True)
     added = 0
     for ds in c.datasets:
         url = [s.get('url') for s in ds.services if
                 s.get('service').lower()=='opendap'][0]
-        metno_obs_stat, cr = StandardMeteorologicalBuoy.objects.get_or_create(url)
+        metno_obs_stat, cr = MetObsStation.objects.get_or_create(url)
         if cr:
             print('Added %s, no. %d/%d'%(url, added, len(c.datasets)))
             added += 1
