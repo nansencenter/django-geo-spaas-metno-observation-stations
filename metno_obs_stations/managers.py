@@ -93,6 +93,8 @@ class MetObsStationManager(models.Manager):
         lon = vars.pop('longitude')
         id = vars.pop('station_id')
         for key in vars.keys():
+            if not 'standard_name' in vars[key].ncattrs():
+                continue
             try:
                 par = Parameter.objects.get(standard_name=vars[key].standard_name)
             except Parameter.DoesNotExist as e:
